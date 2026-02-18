@@ -87,6 +87,11 @@ public class I386 {
     }
 
     /// <summary>
+    /// Is Modem connected to telephone outlet
+    /// </summary>
+    public bool modemConnected => modemCord.Value && phonePaid.Value;
+
+    /// <summary>
     /// The command arguments
     /// </summary>
     public string[] argv;
@@ -94,16 +99,19 @@ public class I386 {
     internal PlayMakerFSM commandFsm;
 
     I386Command currentCommand;
+    Dictionary<string, I386Command> commands;
+    Transform pos;
+    TextMesh consoleText;
     FsmFloat baudFloat;
     FsmString exeString;
     FsmString commandString;
     FsmString oldString;
     FsmString textString;
     FsmString errorString;
-    Transform pos;
-    TextMesh consoleText;
-    Dictionary<string, I386Command> commands;
     FsmString saveFile;
+    FsmBool playerComputer;
+    FsmBool modemCord;
+    FsmBool phonePaid;
 
     internal I386() {
         commands = new Dictionary<string, I386Command>();
@@ -119,9 +127,7 @@ public class I386 {
 
         FsmState customCommandState = commandFsm.AddState("CustomCommand");
         customCommandState.AddTransition("CLOSE", "State 2");
-        //customCommandState.AddTransition("FINISHED", "Write new line");
         customCommandState.AddTransition("FINISHED", "Player input");
-
         commandFsm.FsmInject("CustomCommand", onCustomCommandEnter, false);
         commandFsm.FsmInject("CustomCommand", onCustomCommandUpdate, true);
 
@@ -147,6 +153,16 @@ public class I386 {
 
         saveFile = new FsmString("i386");
         saveFile.Value = "i386.txt";
+
+        playerComputer = PlayMakerGlobals.Instance.Variables.FindFsmBool("PlayerComputer");
+
+        GameObject modemCord_go = GameObject.Find("YARD/Building/LIVINGROOM/Telephone 1/Cord");
+        PlayMakerFSM modemCord_fsm = modemCord_go.GetPlayMaker("Use");
+        modemCord = modemCord_fsm.GetVariable<FsmBool>("CordModem");
+
+        GameObject phoneBill1_go = GameObject.Find("Systems/PhoneBills1");
+        PlayMakerFSM phoneBill1_fsm = phoneBill1_go.GetPlayMaker("Data");
+        phonePaid = phoneBill1_fsm.GetVariable<FsmBool>("PhonePaid");
     }
 
     /// <summary>
@@ -269,6 +285,28 @@ public class I386 {
         oldString.Value = "\n";
         textString.Value = string.Empty;
         consoleText.text = oldString.Value;
+    }
+
+    /// <summary>
+    /// Get key
+    /// </summary>
+    /// <param name="key">key code</param>
+    public bool GetKey(KeyCode key) {
+        return playerComputer.Value && Input.GetKey(key);
+    }
+    /// <summary>
+    /// Get key down
+    /// </summary>
+    /// <param name="key">key code</param>
+    public bool GetKeyDown(KeyCode key) {
+        return playerComputer.Value && Input.GetKeyDown(key);
+    }
+    /// <summary>
+    /// Get key up
+    /// </summary>
+    /// <param name="key">key code</param>
+    public bool GetKeyUp(KeyCode key) {
+        return playerComputer.Value && Input.GetKeyUp(key);
     }
 
     private void exitCommand() {
