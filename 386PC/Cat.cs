@@ -12,10 +12,11 @@ namespace I386PC;
 public class OrderList {
     public List<OrderPart> parts;
     public int price;
-    public GameObject phoneNumber;
+    public GameObject gameObject;
+    public string phoneNumber;
     public OrderType type;
 
-    public bool ordered => phoneNumber.name == "0" || phoneNumber.name == "xx";
+    public bool ordered => gameObject.name == "0" || gameObject.name == "xx";
 
     public OrderList() {
         parts = new List<OrderPart>();
@@ -150,7 +151,8 @@ public class Cat {
             }
 
             orderList.price = (int)order_list._arrayList[0];
-            orderList.phoneNumber = phone_number.gameObject;
+            orderList.gameObject = phone_number.gameObject;
+            orderList.phoneNumber = phone_number.gameObject.name;
 
             // for each part
             for (int j = 1; j < order_list._arrayList.Count; ++j) {
@@ -318,7 +320,7 @@ public class Cat {
         }
     }
     private void spawnOrder(OrderList order) {
-        current_listing.Value = order.phoneNumber;
+        current_listing.Value = order.gameObject;
         order_spawner_fsm.SendEvent("SPAWNITEM");
     }
     private void viewHeader() {
@@ -376,10 +378,10 @@ public class Cat {
             }
 
             if (error) {
-                i386.POS_Write($" [ERROR] - {order.phoneNumber.name}");
+                i386.POS_Write($" [ERROR] - {order.phoneNumber}");
             }
             else {
-                i386.POS_Write($" [BUY] - {order.phoneNumber.name}");
+                i386.POS_Write($" [BUY] - {order.phoneNumber}");
             }
         }
         else {
