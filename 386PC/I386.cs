@@ -5,7 +5,7 @@ using HutongGames.PlayMaker.Actions;
 using System.Collections.Generic;
 using System;
 
-namespace I386;
+namespace I386PC;
 
 public class I386Command {
     public Func<bool> onEnter;
