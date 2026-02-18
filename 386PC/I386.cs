@@ -60,6 +60,18 @@ public class I386Diskette {
         _tag_kb.Value = $"floppy_{exe}_kb";
         _tag_pos.Value = $"floppy_{exe}_pos";
     }
+
+    public void SetTexture(Texture2D texture) {
+        Transform mesh = gameObject.transform.Find("mesh");
+        if (mesh == null) {
+            return;
+        }
+        MeshRenderer renderer = mesh.GetComponent<MeshRenderer>();
+        if (renderer == null) {
+            return;
+        }
+        renderer.materials[1].mainTexture = texture;
+    }
 }
 
 public class I386 {

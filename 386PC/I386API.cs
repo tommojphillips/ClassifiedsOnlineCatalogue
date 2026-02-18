@@ -52,15 +52,21 @@ public class I386API : Mod {
             }
         }
 
+        Texture2D t = new Texture2D(2048, 2048);
+        t.LoadImage(_386PC.Properties.Resources.FLOPPY_CAT);
         I386Command c = new I386Command(cat_e, cat_u);
         i386.AddCommand("cat", c);
         I386Diskette d = i386.CreateDiskette(new Vector3(-9.823606f, 0.2121708f, 13.98593f), new Vector3(270f, 271f, 0f));
         d.LoadExe("cat", 320);
+        d.SetTexture(t);
 
+        Texture2D t1 = new Texture2D(2048, 2048);
+        t1.LoadImage(_386PC.Properties.Resources.FLOPPY_BAUD);
         I386Command c1 = new I386Command(baud_e, null);
         i386.AddCommand("baud", c1);
         I386Diskette d1 = i386.CreateDiskette(new Vector3(-9.808896f, 0.2169641f, 13.98685f), new Vector3(270f, 271f, 0f));
         d1.LoadExe("baud", 320);
+        d1.SetTexture(t1);
     }
     private void Mod_OnSave() {
         SaveLoad.WriteValue<bool>(this, "downloaded", ordersState == OrderState.Viewing);
