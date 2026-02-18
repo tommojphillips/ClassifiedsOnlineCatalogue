@@ -13,6 +13,7 @@ public class OrderList {
     public List<OrderPart> parts;
     public int price;
     public GameObject phoneNumber;
+    public OrderType type;
 
     public bool ordered => phoneNumber.name == "0" || phoneNumber.name == "xx";
 
@@ -22,15 +23,26 @@ public class OrderList {
     }
 }
 public class OrderPart {
-    public string name;
+    public string partName;
+    public string vinName;
+    public string keyword;
 }
 
 public enum OrderState {
-    NewMagazine,
-    Invalid,
-    Downloading,
-    Downloaded,
-    Viewing,
+    Connect,       // -> NotConnected, Viewing or NewMagazine
+    NotConnected,  // -> Connect
+    NewMagazine,   // -> Invalid
+    Invalid,       // -> Downloading
+    Downloading,   // -> Downloaded
+    Downloaded,    // -> Viewing
+    DownloadError, // -> Connect
+    Viewing,       // -> NewMagazine, Connect
+}
+
+public enum OrderType {
+    Wheels,
+    Random,
+    Regular,
 }
 
 public class Cat {
@@ -47,8 +59,12 @@ public class Cat {
     public OrderState ordersState;
 
     int totalBytesDownloaded;
+    Coroutine routine;
 
-    Coroutine populateOrdersRoutine;
+    bool error;
+    bool reconnect;
+    bool newCatalogue;
+    bool downloaded;
 
     public void load() {
         I386 i386 = I386API.GetInstance();
@@ -70,7 +86,8 @@ public class Cat {
         magazine.FsmInject("DayChanger", "Update", onNewMagazine, false, 0);
 
         if (SaveLoad.ValueExists(instance, "downloaded")) {
-            if (SaveLoad.ReadValue<bool>(instance, "downloaded")) {
+            downloaded = SaveLoad.ReadValue<bool>(instance, "downloaded");
+            if (downloaded) {
                 populateOrders(true);
             }
         }
@@ -82,15 +99,29 @@ public class Cat {
         I386Diskette d = i386.CreateDiskette(new Vector3(-9.823606f, 0.2121708f, 13.98593f), new Vector3(270f, 271f, 0f));
         d.LoadExe("cat", 320);
         d.SetTexture(t);
+        
+        error = false;
+        newCatalogue = false;
+        reconnect = false;
     }
     public void save() {
-        SaveLoad.WriteValue<bool>(instance, "downloaded", ordersState == OrderState.Viewing);
+        SaveLoad.WriteValue<bool>(instance, "downloaded", downloaded && !newCatalogue);
     }
 
-    private IEnumerator populateOrdersAsync(bool y = false) {
-        ordersState = OrderState.Downloading;
+    private IEnumerator populateOrdersAsync(bool start = false) {
+        downloaded = false;
         totalBytesDownloaded = 0;
         orders = new List<OrderList>();
+
+        if (!i386.modemConnected) {
+            ordersState = OrderState.DownloadError;
+            routine = null;
+            yield break;
+        }
+
+        ordersState = OrderState.Downloading;
+
+        // for each listing
         for (int i = 0; i < phone_numbers.childCount; i++) {
             Transform phone_number = phone_numbers.GetChild(i);
             PlayMakerFSM phone_number_gen = phone_number.GetPlayMaker("Generate");
@@ -104,25 +135,69 @@ public class Cat {
             PlayMakerArrayListProxy database_list = vin_list.GetComponent<PlayMakerArrayListProxy>();
 
             OrderList orderList = new OrderList();
+
+            if (order_list._arrayList.Count == 3) {
+                // PIC
+                orderList.type = OrderType.Wheels;
+            }
+            else if (order_list._arrayList.Count > 8) {
+                // RANDOM
+                orderList.type = OrderType.Random;
+            }
+            else {
+                // REGULAR
+                orderList.type = OrderType.Regular;
+            }
+
             orderList.price = (int)order_list._arrayList[0];
             orderList.phoneNumber = phone_number.gameObject;
+
+            // for each part
             for (int j = 1; j < order_list._arrayList.Count; ++j) {
 
                 OrderPart orderPart = new OrderPart();
-
                 int index = (int)order_list._arrayList[j];
-                if (index >= database_list._arrayList.Count) {
-                    continue;
+                bool done = false;
+
+                // Different rules for different types of listings
+                switch (orderList.type) {
+                    case OrderType.Wheels:
+                        if (j == 2 /*5*/) {
+                            done = true; // done
+                        }
+                        break;
+                    case OrderType.Random:
+                        if (index == 9999 || j >= 9) {
+                            done = true; // done
+                        }
+                        break;
+                    case OrderType.Regular:
+                        if (j == 7) {
+                            done = true; // done
+                        }
+                        break;
                 }
 
-                string prefab = (string)database_list._arrayList[index];
-
-                GameObject g = null;
-                if (vin_spawners._hashTable.ContainsKey(prefab)) {
-                    g = (GameObject)vin_spawners._hashTable[prefab];
+                // Sanity check
+                if (done || index >= database_list._arrayList.Count) {
+                    break;
                 }
-                else if (pic_spawners._hashTable.ContainsKey(prefab)) {
-                    g = (GameObject)pic_spawners._hashTable[prefab];
+
+                string vin_name = (string)database_list._arrayList[index];
+
+                GameObject g = null;                
+                switch (orderList.type) {
+                    case OrderType.Wheels:
+                        if (pic_spawners._hashTable.ContainsKey(vin_name)) {
+                            g = (GameObject)pic_spawners._hashTable[vin_name];
+                        }
+                        break;
+                    case OrderType.Random:                       
+                    case OrderType.Regular:
+                        if (vin_spawners._hashTable.ContainsKey(vin_name)) {
+                            g = (GameObject)vin_spawners._hashTable[vin_name];
+                        }
+                        break;
                 }
 
                 if (g != null) {
@@ -131,6 +206,7 @@ public class Cat {
                         ModConsole.Error($"{g.name}: Spawn FSM doesnt exist");
                         continue;
                     }
+
                     FsmGameObject s = fsm.GetVariable<FsmGameObject>("Prefab");
                     if (s == null) {
                         ModConsole.Error($"{g.name}: Spawn.Prefab FsmGameObject doesnt exist");
@@ -142,30 +218,52 @@ public class Cat {
                         ModConsole.Error($"{g.name}: Data FSM doesnt exist");
                         continue;
                     }
+
                     FsmString s1 = fsm1.GetVariable<FsmString>("Name");
                     if (s1 == null) {
                         ModConsole.Error($"{g.name}: Data.Name FsmString doesnt exist");
                         continue;
                     }
-                    orderPart.name = s1.Value;
-                }
-                else if (keywords._hashTable.ContainsKey(prefab)) {
-                    orderPart.name = keywords._hashTable[prefab].ToString();
+
+                    orderPart.partName = s1.Value;
                 }
                 else {
-                    orderPart.name = prefab;
+                    orderPart.partName = string.Empty;
                 }
 
-                if (!y) {
-                    int len = orderPart.name.Length;
+                if (keywords._hashTable.ContainsKey(vin_name)) {
+                    orderPart.keyword = keywords._hashTable[vin_name].ToString();
+                }
+                else {
+                    orderPart.keyword = string.Empty; 
+                }
+
+                orderPart.vinName = vin_name;
+
+                if (!start) {
+                    int len = orderPart.partName.Length + orderPart.vinName.Length + orderPart.keyword.Length;
                     if (i386.baud <= 600) {
                         while (len > 0) {
+
+                            if (!i386.modemConnected) {
+                                ordersState = OrderState.DownloadError;
+                                routine = null;
+                                yield break;
+                            }
+
                             len--;
                             totalBytesDownloaded += 1;
                             yield return new WaitForSeconds(i386.GetDownloadTime(1));
                         }
                     }
                     else {
+
+                        if (!i386.modemConnected) {
+                            ordersState = OrderState.DownloadError;
+                            routine = null;
+                            yield break;
+                        }
+
                         totalBytesDownloaded += len;
                         yield return new WaitForSeconds(i386.GetDownloadTime(len));
                     }
@@ -175,20 +273,48 @@ public class Cat {
             }
             orders.Add(orderList);
         }
+        ordersIndex = 0;
+        downloaded = true;
+        newCatalogue = false;
 
-        if (!y) {
-            ordersIndex = 0;
+        if (!start) {
             ordersState = OrderState.Downloaded;
         }
         else {
             ordersState = OrderState.Viewing;
         }
-        populateOrdersRoutine = null;
+
+        routine = null;
+    }
+    private IEnumerator connectAsync() {
+
+        if (i386.modemConnected) {
+            if (downloaded && !newCatalogue) {
+                yield return new WaitForSeconds(0.65f);
+                ordersState = OrderState.Viewing;
+            }
+            else {
+                yield return new WaitForSeconds(0.95f);
+                ordersState = OrderState.NewMagazine;
+            }
+        }
+        else {
+            yield return new WaitForSeconds(1.3f);
+            ordersState = OrderState.NotConnected;
+        }
+
+        reconnect = false;
+        routine = null;
     }
 
     private void populateOrders(bool y = false) {
-        if (populateOrdersRoutine == null) {
-            populateOrdersRoutine = order_spawner_fsm.StartCoroutine(populateOrdersAsync(y));
+        if (routine == null) {
+            routine = order_spawner_fsm.StartCoroutine(populateOrdersAsync(y));
+        }
+    }
+    private void connect() {
+        if (routine == null) {
+            routine = order_spawner_fsm.StartCoroutine(connectAsync());
         }
     }
     private void spawnOrder(OrderList order) {
@@ -202,25 +328,64 @@ public class Cat {
     }
 
     private void viewOrder(OrderList order) {
+        if (i386.GetKeyDown(KeyCode.LeftArrow)) {
+            ordersIndex = ordersIndex - 1;
+            if (ordersIndex < 0) {
+                ordersIndex = orders.Count - 1;
+            }
+            error = false;
+        }
+        if (i386.GetKeyDown(KeyCode.RightArrow)) {
+            ordersIndex = ordersIndex + 1;
+            if (ordersIndex >= orders.Count) {
+                ordersIndex = 0;
+            }
+            error = false;
+        }
+
+        if (i386.modemConnected) {
+            error = false;
+            if (reconnect) {
+                ordersState = OrderState.Connect;
+                return;
+            }
+            if (newCatalogue) {
+                ordersState = OrderState.Connect;
+                return;
+            }
+        }
+        else {
+            reconnect = true;
+        }
+
         viewHeader();
         for (int j = 0; j < order.parts.Count; ++j) {
-            i386.POS_WriteNewLine($"\t\t\t\t\t++ {order.parts[j].name}");
+            i386.POS_WriteNewLine($"\t\t\t\t\t++ {order.parts[j].partName}");
         }
         i386.POS_WriteNewLine("\t\t\t\t\t-------------------------------------");
         i386.POS_Write($"\t\t\t\t\t\t{(ordersIndex + 1).ToString("00")}/{orders.Count} - ${order.price}");
         if (!order.ordered) {
-            i386.POS_Write($" [BUY] - {order.phoneNumber.name}");
+
+            if (i386.GetKeyDown(KeyCode.Space)) {
+                if (i386.modemConnected) {
+                    spawnOrder(order);
+                }
+                else {
+                    error = true;
+                }
+            }
+
+            if (error) {
+                i386.POS_Write($" [ERROR] - {order.phoneNumber.name}");
+            }
+            else {
+                i386.POS_Write($" [BUY] - {order.phoneNumber.name}");
+            }
         }
         else {
             i386.POS_Write(" [ON ORDER]");
         }
         i386.POS_NewLine();
-
-        if (!order.ordered) {
-            if (Input.GetKeyDown(KeyCode.Space)) {
-                spawnOrder(order);
-            }
-        }
     }
     private void viewDownload() {
         viewHeader();
@@ -229,66 +394,82 @@ public class Cat {
                 i386.POS_Write($"\t\t\t\t\t     Downloading.... {orders.Count}/{phone_numbers.childCount} ");
                 break;
             case OrderState.Downloaded:
-                i386.POS_Write($"\t\t\t\t\t   Download Finished - {orders.Count}/{orders.Count} ");
+                i386.POS_Write($"\t\t\t\t\t      Download Finished - ");
+                break;
+            case OrderState.DownloadError:
+                i386.POS_Write($"\t\t\t\t\t             Download Error");
                 break;
         }
 
-        if (totalBytesDownloaded < 1024) {
-            i386.POS_Write($"{totalBytesDownloaded}b");
+        if (ordersState != OrderState.DownloadError) {
+            if (totalBytesDownloaded < 1024) {
+                i386.POS_Write($"{totalBytesDownloaded}b");
+            }
+            else {
+                i386.POS_Write($"{(totalBytesDownloaded / 1024.0f).ToString("0.000")}kb");
+            }
         }
-        else {
-            i386.POS_Write($"{(totalBytesDownloaded / 1024.0f).ToString("0.000")}kb");
-        }
+
         i386.POS_NewLine();
 
         if (ordersState == OrderState.Downloaded) {
-            i386.POS_Write($"\t\t\t\t\t        Press Space to Continue");
-            if (Input.GetKeyDown(KeyCode.Space)) {
+            i386.POS_WriteNewLine($"\t\t\t\t\t        Press Space to Continue");
+            if (i386.GetKeyDown(KeyCode.Space)) {
                 ordersState = OrderState.Viewing;
+            }
+        }
+
+        if (ordersState == OrderState.DownloadError) {
+            i386.POS_WriteNewLine($"\t\t\t\t\t         Press Space to Retry");
+            if (i386.GetKeyDown(KeyCode.Space)) {
+                ordersState = OrderState.Connect;
             }
         }
     }
     private void viewNewMagazine() {
         viewHeader();
         i386.POS_WriteNewLine($"\t\t\t\t\t New magazine available for download");
-        i386.POS_Write($"\t\t\t\t\t        Press Space to Continue");
-        if (Input.GetKeyDown(KeyCode.Space)) {
+        i386.POS_WriteNewLine($"\t\t\t\t\t       Press Space to Download");
+        if (i386.GetKeyDown(KeyCode.Space)) {
             ordersState = OrderState.Invalid;
         }
+    }
+    private void viewNotConnected() {
+        viewHeader();
+        i386.POS_WriteNewLine($"\t\t\t\t\t            Not Connected");
+        i386.POS_WriteNewLine($"\t\t\t\t\t        Press Space to Connect");
+        if (i386.GetKeyDown(KeyCode.Space)) {
+            ordersState = OrderState.Connect;
+        }
+    }
+    private void viewConnect() {
+        viewHeader();
+        i386.POS_WriteNewLine($"\t\t\t\t\t             Connecting...");
+        connect();
     }
 
     private bool enter() {
         ordersIndex = 0;
-
-        if (ordersState == OrderState.Downloading || ordersState == OrderState.Downloaded) {
-            ordersState = OrderState.NewMagazine;
-        }
-
+        ordersState = OrderState.Connect;
         return false; // dont exit 
     }
     private bool update() {
         try {
-            if (Input.GetKeyDown(KeyCode.LeftArrow)) {
-                ordersIndex = ordersIndex - 1;
-                if (ordersIndex < 0) {
-                    ordersIndex = orders.Count - 1;
-                }
-            }
-            if (Input.GetKeyDown(KeyCode.RightArrow)) {
-                ordersIndex = ordersIndex + 1;
-                if (ordersIndex >= orders.Count) {
-                    ordersIndex = 0;
-                }
-            }
-            if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.C)) {
-                if (populateOrdersRoutine != null) {
-                    i386.commandFsm.StopCoroutine(populateOrdersRoutine);
-                    populateOrdersRoutine = null;
+            if (i386.GetKey(KeyCode.LeftControl) && i386.GetKeyDown(KeyCode.C)) {
+                if (routine != null) {
+                    i386.commandFsm.StopCoroutine(routine);
+                    routine = null;
                 }
                 return true; // exit
             }
 
             switch (ordersState) {
+                case OrderState.Connect:
+                    viewConnect();
+                    break;
+                case OrderState.NotConnected:
+                    viewNotConnected();
+                    break;
                 case OrderState.NewMagazine:
                     viewNewMagazine();
                     break;
@@ -297,6 +478,7 @@ public class Cat {
                     break;
                 case OrderState.Downloading:
                 case OrderState.Downloaded:
+                case OrderState.DownloadError:
                     viewDownload();
                     break;
                 case OrderState.Viewing:
@@ -312,7 +494,9 @@ public class Cat {
     }
 
     private void onNewMagazine() {
-        ordersState = OrderState.NewMagazine;
+        newCatalogue = true;
+        if (i386.modemConnected) {
+            ordersState = OrderState.NewMagazine;
+        }
     }
-
 }
