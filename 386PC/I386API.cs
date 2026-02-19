@@ -6,7 +6,7 @@ public class I386API : Mod {
     public override string ID => "I386PC";
     public override string Name => "I386 PC";
     public override string Author => "tommojphillips";
-    public override string Version => "1.2";
+    public override string Version => "1.3";
     public override string Description => "I386 PC";
     public override Game SupportedGames => Game.MyWinterCar;
 
