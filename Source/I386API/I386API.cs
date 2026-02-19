@@ -1,6 +1,7 @@
 ﻿using MSCLoader;
+using ClassifiedsOnlineCatalogue;
 
-namespace I386PC;
+namespace I386API;
 
 public class I386API : Mod {
     public override string ID => "I386PC";

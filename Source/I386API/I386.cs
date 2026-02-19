@@ -5,7 +5,7 @@ using HutongGames.PlayMaker.Actions;
 using System.Collections.Generic;
 using System;
 
-namespace I386PC;
+namespace I386API;
 
 public class I386Command {
     public Func<bool> onEnter;
@@ -167,7 +167,7 @@ public class I386 {
         phonePaid = phoneBill1_fsm.GetVariable<FsmBool>("PhonePaid");
 
         floppyBlankTexture = new Texture2D(2048, 2048);
-        floppyBlankTexture.LoadImage(_386PC.Properties.Resources.FLOPPY_BLANK);
+        floppyBlankTexture.LoadImage(Resources.FLOPPY_BLANK);
         floppyBlankTexture.name = "FLOPPY_IMAGE";
 
         floppyPrefab = GameObject.Find("diskette(itemx)");

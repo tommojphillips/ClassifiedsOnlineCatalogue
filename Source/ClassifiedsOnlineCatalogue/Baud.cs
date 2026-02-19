@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
+using I386API;
 
-using static I386PC.I386API;
+using static I386API.I386API;
 
-namespace I386PC;
+namespace ClassifiedsOnlineCatalogue;
 
 public class Baud {
     public Texture2D texture;
@@ -15,7 +16,7 @@ public class Baud {
  
     public void load() {
         texture = new Texture2D(2048, 2048);
-        texture.LoadImage(_386PC.Properties.Resources.FLOPPY_BAUD);
+        texture.LoadImage(I386API.Resources.FLOPPY_BAUD);
         texture.name = "FLOPPY_BAUD";
 
         command = new I386Command(enter, null);

@@ -1,9 +1,10 @@
-﻿using MSCLoader;
-using UnityEngine;
+﻿using UnityEngine;
+using MSCLoader;
+using I386API;
 
-using static I386PC.I386API;
+using static I386API.I386API;
 
-namespace I386PC;
+namespace ClassifiedsOnlineCatalogue;
 
 public class Del {
     public Texture2D texture;
@@ -12,7 +13,7 @@ public class Del {
 
     public void load() {
         texture = new Texture2D(2048, 2048);
-        texture.LoadImage(_386PC.Properties.Resources.FLOPPY_DEL);
+        texture.LoadImage(I386API.Resources.FLOPPY_DEL);
         texture.name = "FLOPPY_DEL";
 
         command = new I386Command(enter, null);

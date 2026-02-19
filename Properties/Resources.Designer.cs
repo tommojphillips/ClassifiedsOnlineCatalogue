@@ -8,9 +8,8 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace _386PC.Properties {
-    using System;
-    
+namespace I386API {
+    using System;    
     
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
@@ -22,7 +21,7 @@ namespace _386PC.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,10 +35,10 @@ namespace _386PC.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("_386PC.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("I386API.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -51,7 +50,7 @@ namespace _386PC.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +62,7 @@ namespace _386PC.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] FLOPPY_BAUD {
+        public static byte[] FLOPPY_BAUD {
             get {
                 object obj = ResourceManager.GetObject("FLOPPY_BAUD", resourceCulture);
                 return ((byte[])(obj));
@@ -73,7 +72,7 @@ namespace _386PC.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] FLOPPY_BLANK {
+        public static byte[] FLOPPY_BLANK {
             get {
                 object obj = ResourceManager.GetObject("FLOPPY_BLANK", resourceCulture);
                 return ((byte[])(obj));
@@ -83,7 +82,7 @@ namespace _386PC.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] FLOPPY_CAT {
+        public static byte[] FLOPPY_CAT {
             get {
                 object obj = ResourceManager.GetObject("FLOPPY_CAT", resourceCulture);
                 return ((byte[])(obj));
@@ -93,7 +92,7 @@ namespace _386PC.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] FLOPPY_DEL {
+        public static byte[] FLOPPY_DEL {
             get {
                 object obj = ResourceManager.GetObject("FLOPPY_DEL", resourceCulture);
                 return ((byte[])(obj));

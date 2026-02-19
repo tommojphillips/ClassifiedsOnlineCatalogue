@@ -5,9 +5,11 @@ using UnityEngine;
 using HutongGames.PlayMaker;
 using MSCLoader;
 
-using static I386PC.I386API;
+using I386API;
 
-namespace I386PC;
+using static I386API.I386API;
+
+namespace ClassifiedsOnlineCatalogue;
 
 public class OrderList {
     public List<OrderPart> parts;
@@ -72,8 +74,6 @@ public class Cat {
     bool downloaded;
 
     public void load() {
-        I386 i386 = I386API.GetInstance();
-
         phone_numbers = GameObject.Find("CARPARTS/PARTSYSTEM/PhoneNumbers").transform;
 
         GameObject order_spawner = GameObject.Find("CARPARTS/PARTSYSTEM/OrdersSpawnerYP");
@@ -98,7 +98,7 @@ public class Cat {
         }
 
         texture = new Texture2D(2048, 2048);
-        texture.LoadImage(_386PC.Properties.Resources.FLOPPY_CAT);
+        texture.LoadImage(I386API.Resources.FLOPPY_CAT);
         texture.name = "FLOPPY_CAT";
 
         command = new I386Command(enter, update);
