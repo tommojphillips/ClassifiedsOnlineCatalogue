@@ -35,7 +35,8 @@ internal class Baud {
             }
 
             if (invalid) {
-                I386.POS_WriteNewLine("invalid baud rate");
+                string msg = ClassifiedsOnlineCatalogue.instance != null ? ClassifiedsOnlineCatalogue.instance.Localize("Invalid baud rate") : "Invalid baud rate";
+                I386.POS_WriteNewLine(msg);
             }
         }
         else {
