@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
-using System.Text;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using HutongGames.PlayMaker;
 using MSCLoader;
@@ -423,24 +421,20 @@ internal class Cat {
         return s;
     }
 
-    // Normaliza chaves: remove diacríticos, reduz múltiplos espaços, converte pra lower
-    private string NormalizeKey(string s) {
-        if (string.IsNullOrEmpty(s)) return string.Empty;
-        // remover marcas diacríticas
-        string formD = s.Normalize(NormalizationForm.FormD);
-        StringBuilder sb = new StringBuilder();
-        foreach (char ch in formD) {
-            var uc = CharUnicodeInfo.GetUnicodeCategory(ch);
-            if (uc != UnicodeCategory.NonSpacingMark) sb.Append(ch);
-        }
-        string noDiacritics = sb.ToString();
-        // colapsar espaços
-        string collapsed = Regex.Replace(noDiacritics, "\\s+", " ").Trim();
-        // remover pontuação exceto / (usado em datas) — aceitar letras e números
-        string cleaned = Regex.Replace(collapsed, "[^\\p{L}\\p{N}\\/ ]+", "");
-        return cleaned.ToLowerInvariant();
-    }
+    // Normaliza chaves: reduz múltiplos espaços, remove pontuação simples e converte pra lower
+    private string NormalizeKey(string s)
+    {
+    if (string.IsNullOrEmpty(s))
+        return string.Empty;
 
+    // colapsar múltiplos espaços
+    string collapsed = Regex.Replace(s, "\\s+", " ").Trim();
+
+    // remover pontuação (mantém letras, números, / e espaço)
+    string cleaned = Regex.Replace(collapsed, "[^a-zA-Z0-9\\/ ]+", "");
+
+    return cleaned.ToLowerInvariant();
+    }
 
 	// Carrega traduções a partir de um arquivo JSON simples localizado Mods\Config\Mod Settings\ClassifiedsOnlineCatalogue:
 	// { "English text": "Texto em Português", ... }
@@ -467,14 +461,12 @@ internal class Cat {
         // Regex simples para pares "key": "value"
         Regex rx = new Regex("\"(.*?)\"\\s*:\\s*\"(.*?)\"", RegexOptions.Singleline);
         MatchCollection matches = rx.Matches(json);
-        int parsed = 0;
         foreach (Match m in matches) {
             try {
                 string key = Regex.Unescape(m.Groups[1].Value);
                 string val = Regex.Unescape(m.Groups[2].Value);
                 if (translations == null) translations = new Dictionary<string, string>();
                 translations[key] = val;
-                parsed++;
             }
             catch {
                 // ignorar entrada inválida
