@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using I386API;
+using MSCLoader;
 
 namespace ClassifiedsOnlineCatalogue;
 
@@ -23,6 +24,14 @@ internal class Baud {
     private bool enter() {
         if (I386.Args.Length > 1) {
             bool invalid = true;
+            
+            // Check for help command
+            if (I386.Args[1] == "?" || I386.Args[1] == "help") {
+                I386.POS_WriteNewLine("baud [Velocidade de transmissão]");
+                I386.POS_WriteNewLine("Velocidades: 300, 600, 1200, 2400, 4800, 9600");
+                return true; // exit
+            }
+            
             if (float.TryParse(I386.Args[1], out float baud)) {
                 for (int i = 0; i < s.Length; ++i) {
                     if (s[i] == baud) {
