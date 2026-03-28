@@ -9,29 +9,30 @@ using I386API;
 namespace ClassifiedsOnlineCatalogue;
 
 internal class Cat {
-    int ordersIndex = 0;
-    Transform phone_numbers;
-    PlayMakerFSM order_spawner_fsm;
-    FsmGameObject current_listing;
+    private List<OrderList> orders;
 
-    PlayMakerHashTableProxy vin_spawners;
-    PlayMakerHashTableProxy pic_spawners;
-    PlayMakerHashTableProxy keywords;
-    PlayMakerArrayListProxy line0;
-    PlayMakerArrayListProxy line1;
-    PlayMakerArrayListProxy line2;
-    PlayMakerArrayListProxy line3;
+    private int index = 0;
+    private OrderState state;
+    private Coroutine routine;
 
-    public List<OrderList> orders;
-    public OrderState ordersState;
+    private Transform phone_numbers;
+    private PlayMakerFSM order_spawner_fsm;
+    private FsmGameObject current_listing;
 
-    int totalBytesDownloaded;
-    Coroutine routine;
+    private PlayMakerHashTableProxy vin_spawners;
+    private PlayMakerHashTableProxy pic_spawners;
+    private PlayMakerHashTableProxy keywords;
+    private PlayMakerArrayListProxy line0;
+    private PlayMakerArrayListProxy line1;
+    private PlayMakerArrayListProxy line2;
+    private PlayMakerArrayListProxy line3;
 
-    bool error;
-    bool reconnect;
-    bool newCatalogue;
-    bool downloaded;
+    private int totalBytesDownloaded;
+
+    private bool error;
+    private bool reconnect;
+    private bool newCatalogue;
+    private bool downloaded;
 
     public void load() {
         phone_numbers = GameObject.Find("CARPARTS/PARTSYSTEM/PhoneNumbers").transform;
@@ -98,12 +99,12 @@ internal class Cat {
         orders = new List<OrderList>();
 
         if (!I386.ModemConnected) {
-            ordersState = OrderState.DownloadError;
+            state = OrderState.DownloadError;
             routine = null;
             yield break;
         }
 
-        ordersState = OrderState.Downloading;
+        state = OrderState.Downloading;
 
         // for each listing
         for (int i = 0; i < phone_numbers.childCount; i++) {
@@ -276,7 +277,7 @@ internal class Cat {
                         while (len > 0) {
 
                             if (!I386.ModemConnected) {
-                                ordersState = OrderState.DownloadError;
+                                state = OrderState.DownloadError;
                                 routine = null;
                                 yield break;
                             }
@@ -289,7 +290,7 @@ internal class Cat {
                     else {
 
                         if (!I386.ModemConnected) {
-                            ordersState = OrderState.DownloadError;
+                            state = OrderState.DownloadError;
                             routine = null;
                             yield break;
                         }
@@ -303,15 +304,15 @@ internal class Cat {
             }
             orders.Add(orderList);
         }
-        ordersIndex = 0;
+        index = 0;
         downloaded = true;
         newCatalogue = false;
 
         if (!start) {
-            ordersState = OrderState.Downloaded;
+            state = OrderState.Downloaded;
         }
         else {
-            ordersState = OrderState.Viewing;
+            state = OrderState.Viewing;
         }
 
         routine = null;
@@ -321,16 +322,16 @@ internal class Cat {
         if (I386.ModemConnected) {
             if (downloaded && !newCatalogue) {
                 yield return new WaitForSeconds(0.65f);
-                ordersState = OrderState.Viewing;
+                state = OrderState.Viewing;
             }
             else {
                 yield return new WaitForSeconds(0.95f);
-                ordersState = OrderState.NewMagazine;
+                state = OrderState.NewMagazine;
             }
         }
         else {
             yield return new WaitForSeconds(1.3f);
-            ordersState = OrderState.NotConnected;
+            state = OrderState.NotConnected;
         }
 
         reconnect = false;
@@ -339,12 +340,12 @@ internal class Cat {
 
     private void populateOrders(bool y = false) {
         if (routine == null) {
-            routine = order_spawner_fsm.StartCoroutine(populateOrdersAsync(y));
+            routine = I386.StartCoroutine(populateOrdersAsync(y));
         }
     }
     private void connect() {
         if (routine == null) {
-            routine = order_spawner_fsm.StartCoroutine(connectAsync());
+            routine = I386.StartCoroutine(connectAsync());
         }
     }
     private void spawnOrder(OrderList order) {
@@ -359,16 +360,16 @@ internal class Cat {
 
     private void viewOrder(OrderList order) {
         if (I386.GetKeyDown(KeyCode.LeftArrow)) {
-            ordersIndex = ordersIndex - 1;
-            if (ordersIndex < 0) {
-                ordersIndex = orders.Count - 1;
+            index = index - 1;
+            if (index < 0) {
+                index = orders.Count - 1;
             }
             error = false;
         }
         if (I386.GetKeyDown(KeyCode.RightArrow)) {
-            ordersIndex = ordersIndex + 1;
-            if (ordersIndex >= orders.Count) {
-                ordersIndex = 0;
+            index = index + 1;
+            if (index >= orders.Count) {
+                index = 0;
             }
             error = false;
         }
@@ -376,11 +377,11 @@ internal class Cat {
         if (I386.ModemConnected) {
             error = false;
             if (reconnect) {
-                ordersState = OrderState.Connect;
+                state = OrderState.Connect;
                 return;
             }
             if (newCatalogue) {
-                ordersState = OrderState.Connect;
+                state = OrderState.Connect;
                 return;
             }
         }
@@ -408,7 +409,7 @@ internal class Cat {
             I386.POS_WriteNewLine($"\t\t\t\t\t++ {order.parts[j].partName}");
         }
         I386.POS_WriteNewLine("\t\t\t\t\t-------------------------------------");
-        I386.POS_Write($"\t\t\t\t\t\t{(ordersIndex + 1).ToString("00")}/{orders.Count} - ${order.price}");
+        I386.POS_Write($"\t\t\t\t\t\t{(index + 1).ToString("00")}/{orders.Count} - ${order.price}");
         if (!order.ordered) {
 
             if (I386.GetKeyDown(KeyCode.Space)) {
@@ -434,7 +435,7 @@ internal class Cat {
     }
     private void viewDownload() {
         viewHeader();
-        switch (ordersState) {
+        switch (state) {
             case OrderState.Downloading:
                 I386.POS_Write($"\t\t\t\t\t     Downloading.... {orders.Count}/{phone_numbers.childCount} ");
                 break;
@@ -446,7 +447,7 @@ internal class Cat {
                 break;
         }
 
-        if (ordersState != OrderState.DownloadError) {
+        if (state != OrderState.DownloadError) {
             if (totalBytesDownloaded < 1024) {
                 I386.POS_Write($"{totalBytesDownloaded}b");
             }
@@ -457,17 +458,17 @@ internal class Cat {
 
         I386.POS_NewLine();
 
-        if (ordersState == OrderState.Downloaded) {
+        if (state == OrderState.Downloaded) {
             I386.POS_WriteNewLine($"\t\t\t\t\t        Press Space to Continue");
             if (I386.GetKeyDown(KeyCode.Space)) {
-                ordersState = OrderState.Viewing;
+                state = OrderState.Viewing;
             }
         }
 
-        if (ordersState == OrderState.DownloadError) {
+        if (state == OrderState.DownloadError) {
             I386.POS_WriteNewLine($"\t\t\t\t\t         Press Space to Retry");
             if (I386.GetKeyDown(KeyCode.Space)) {
-                ordersState = OrderState.Connect;
+                state = OrderState.Connect;
             }
         }
     }
@@ -476,7 +477,7 @@ internal class Cat {
         I386.POS_WriteNewLine($"\t\t\t\t\t New magazine available for download");
         I386.POS_WriteNewLine($"\t\t\t\t\t       Press Space to Download");
         if (I386.GetKeyDown(KeyCode.Space)) {
-            ordersState = OrderState.Invalid;
+            state = OrderState.Invalid;
         }
     }
     private void viewNotConnected() {
@@ -484,7 +485,7 @@ internal class Cat {
         I386.POS_WriteNewLine($"\t\t\t\t\t            Not Connected");
         I386.POS_WriteNewLine($"\t\t\t\t\t        Press Space to Connect");
         if (I386.GetKeyDown(KeyCode.Space)) {
-            ordersState = OrderState.Connect;
+            state = OrderState.Connect;
         }
     }
     private void viewConnect() {
@@ -494,21 +495,20 @@ internal class Cat {
     }
 
     private bool enter() {
-        ordersIndex = 0;
-        ordersState = OrderState.Connect;
+        index = 0;
+        state = OrderState.Connect;
+        routine = null;
+        error = false;
+        reconnect = false;
         return false; // dont exit 
     }
     private bool update() {
         try {
             if (I386.GetKey(KeyCode.LeftControl) && I386.GetKeyDown(KeyCode.C)) {
-                if (routine != null) {
-                    I386.StopCoroutine(routine);
-                    routine = null;
-                }
                 return true; // exit
             }
 
-            switch (ordersState) {
+            switch (state) {
                 case OrderState.Connect:
                     viewConnect();
                     break;
@@ -527,7 +527,7 @@ internal class Cat {
                     viewDownload();
                     break;
                 case OrderState.Viewing:
-                    viewOrder(orders[ordersIndex]);
+                    viewOrder(orders[index]);
                     break;
             }
         }
@@ -541,7 +541,7 @@ internal class Cat {
     private void onNewMagazine() {
         newCatalogue = true;
         if (I386.ModemConnected) {
-            ordersState = OrderState.NewMagazine;
+            state = OrderState.NewMagazine;
         }
     }
 }
