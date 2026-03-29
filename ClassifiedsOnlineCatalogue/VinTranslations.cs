@@ -81,9 +81,9 @@ internal static class VinTranslations {
         { "Dash Top Cover", "Capa superior do painel" },
         { "Dash Bottom Cover", "Capa inferior do painel" },
         { "Aux Shaft Sprocket", "Engrenagem do eixo auxiliar" },
-        { "Front Link Right", "Braço Dianteiro Direito" },
-        { "Front Link Left", "Braço Dianteiro Esquerdo" },
-        { "Camshaft Standard", "Comando de Válvulas Padrão" },
+        { "Front Link Right", "Braço dianteiro direito" },
+        { "Front Link Left", "Braço dianteiro esquerdo" },
+        { "Camshaft Standard", "Comando de válvulas Padrão" },
         { "Spring", "Mola" },
         { "Rear Seat Backrest", "Encosto do banco traseiro" },
         { "Rear Seat Bench", "Banco traseiro" },
@@ -107,6 +107,9 @@ internal static class VinTranslations {
         { "Oilpan", "Cárter" },
         { "Exhaust Headers", "Coletores de escape" },
         { "Steering Wheel gt", "Volante gt" },
+        { "Aux Shaft", "Eixo auxiliar" },
+        { "Rocker Cover", "Tampa de válvula" },
+        { "Water Pump", "Bomba d'água" },
     };
 
     private static string NormalizeKey(string key) {
