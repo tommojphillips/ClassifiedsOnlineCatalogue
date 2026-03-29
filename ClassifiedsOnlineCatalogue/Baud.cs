@@ -19,20 +19,24 @@ internal class Baud {
 
         Diskette diskette = Diskette.Create("baud", new Vector3(-9.9434f, 0.2114929f, 13.99708f), new Vector3(270f, 271.8562f, 0f));
         diskette.SetTexture(texture);
+
+        // remove "Baud=300" when loading BBS
+        Transform go = I386.Transform.Find("SYSTEM/POS/Command");
+        PlayMakerFSM fsm = go.GetPlayMaker("Typer");
+        fsm.FsmInject("Load BBS", onLoadBBS, false, 0, true);
+
+        // Add "Buad=300" when pc is turned off
+        I386.OnTurnOff += i386_OnTurnOff;
     }
 
     private bool enter() {
         if (I386.Args.Length > 1) {
             bool invalid = true;
-            
-            // Check for help command
-            if (I386.Args[1] == "?" || I386.Args[1] == "help") {
-                I386.POS_WriteNewLine("baud [Velocidade de transmissão]");
-                I386.POS_WriteNewLine("Velocidades: 300, 600, 1200, 2400, 4800, 9600");
-                return true; // exit
+            if (I386.Args[1] == "help" || I386.Args[1] == "?") {
+                invalid = false;
+                I386.POS_WriteNewLine("baud={taxa}\nEsperado: 300, 600, 1200, 2400, 4800, 9600");
             }
-            
-            if (float.TryParse(I386.Args[1], out float baud)) {
+            else if (float.TryParse(I386.Args[1], out float baud)) {
                 for (int i = 0; i < s.Length; ++i) {
                     if (s[i] == baud) {
                         I386.Baud = baud;
@@ -44,8 +48,7 @@ internal class Baud {
             }
 
             if (invalid) {
-                string msg = ClassifiedsOnlineCatalogue.instance != null ? ClassifiedsOnlineCatalogue.instance.Localize("Invalid baud rate") : "Invalid baud rate";
-                I386.POS_WriteNewLine(msg);
+                I386.POS_WriteNewLine("taxa de baud inválida");
             }
         }
         else {
@@ -53,5 +56,12 @@ internal class Baud {
         }
 
         return true; // exit
+    }
+
+    private void i386_OnTurnOff() {
+        I386.Baud = 300; // reset to 300 baud on PC OFF.
+    }
+    private void onLoadBBS() {
+        // nothing
     }
 }

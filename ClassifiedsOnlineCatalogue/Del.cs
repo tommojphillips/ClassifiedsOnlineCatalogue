@@ -26,12 +26,10 @@ internal class Del {
         }
         
         if (invalid) {
-            string msg = ClassifiedsOnlineCatalogue.instance != null ? ClassifiedsOnlineCatalogue.instance.Localize("File not found") : "File not found";
-            I386.POS_WriteNewLine(msg);
+            I386.POS_WriteNewLine("Não foi possível encontrar o arquivo");
         }
         else {
-            string tpl = ClassifiedsOnlineCatalogue.instance != null ? ClassifiedsOnlineCatalogue.instance.Localize("Deleted file '{0}'") : "Deleted file '{0}'";
-            I386.POS_WriteNewLine(string.Format(tpl, I386.Args[1]));
+            I386.POS_WriteNewLine($"Arquivo '{I386.Args[1]}' excluído");
         }
 
         return true; // exit
