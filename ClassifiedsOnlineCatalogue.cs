@@ -6,7 +6,7 @@ public class ClassifiedsOnlineCatalogue : Mod {
     public override string ID => "ClassifiedsOnlineCatalogue";
     public override string Name => "Classifieds Online Catalogue";
     public override string Author => "tommojphillips";
-    public override string Version => "1.5";
+    public override string Version => "1.5.1";
     public override string Description => "Order used car parts online!";
     public override Game SupportedGames => Game.MyWinterCar;
 
