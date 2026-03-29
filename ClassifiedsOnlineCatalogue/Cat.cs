@@ -57,10 +57,6 @@ internal class Cat {
         GameObject g = GameObject.Find("CARPARTS/PARTSYSTEM/PostSystem/VINLIST_TirePics");
         line0 = g.GetArrayListProxy("TextEN");
 
-        // Get keywords FI
-        //GameObject order_keywords = GameObject.Find("CARPARTS/PARTSYSTEM/PostSystem/KeywordsFI");
-        //keywords = order_keywords.GetComponent<PlayMakerHashTableProxy>();
-
         // Hook magazine update
         GameObject magazine = GameObject.Find("Systems/MarkettiMagazine");
         magazine.FsmInject("DayChanger", "Update", onNewMagazine, false, 0);

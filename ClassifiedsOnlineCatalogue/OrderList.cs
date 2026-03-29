@@ -13,6 +13,7 @@ internal class OrderList {
     internal string line1;
     internal string line2;
     internal string line3;
+    internal int len;
 
     internal bool ordered => gameObject.name == "0" || gameObject.name == "xx";
 
