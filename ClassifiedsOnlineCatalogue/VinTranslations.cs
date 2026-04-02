@@ -72,7 +72,7 @@ namespace ClassifiedsOnlineCatalogue
             translations.Add("Radiator Hose Top", "Mangueira superior do radiador");
             translations.Add("Radiator Hose Bottom", "Mangueira inferior do radiador");
             translations.Add("Rear Axle", "Eixo traseiro");
-            translations.Add("Main Bearing", "Rolamento principal");
+            translations.Add("Main Bearing", "Mancal principal");
             translations.Add("Alternator", "Alternador");
             translations.Add("Center Console", "Console central");
             translations.Add("Thermostat Housing", "Carcaça do termostato");
@@ -114,6 +114,7 @@ namespace ClassifiedsOnlineCatalogue
             translations.Add("Aux Shaft", "Eixo auxiliar");
             translations.Add("Rocker Cover", "Tampa de válvula");
             translations.Add("Water Pump", "Bomba d'água");
+            translations.Add("Crankshaft Pulley", "Polia do virabrequim");
         }
 
         private static string NormalizeKey(string key)
