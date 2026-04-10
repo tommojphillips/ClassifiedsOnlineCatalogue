@@ -421,7 +421,7 @@ internal class Cat {
         viewHeader();
         switch (state) {
             case OrderState.Downloading:
-                I386.POS_Write($"\t\t\t\t\t     Baixando.... {orders.Count}/{phone_numbers.childCount} ");
+                I386.POS_Write($"\t\t\t\t\t       Baixando.... {orders.Count}/{phone_numbers.childCount} ");
                 break;
             case OrderState.Downloaded:
                 I386.POS_Write($"\t\t\t\t\t      Download concluído - ");

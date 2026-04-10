@@ -18,7 +18,7 @@ namespace ClassifiedsOnlineCatalogue
             translations.Add("Manual Gearbox 5 spd", "Câmbio manual 5 marchas");
             translations.Add("Manual Gearbox 4 spd", "Câmbio manual 4 marchas");
             translations.Add("Automatic Gearbox 3 spd", "Câmbio automático 3 marchas");
-            translations.Add("Brake Lines", "Cabos de freio");
+            translations.Add("Brake Lines", "Linhas de freio");
             translations.Add("Brake Master Cylinder", "Cilindro mestre de freio");
             translations.Add("Heater Hose Inlet", "Mangueira de entrada do aquecedor");
             translations.Add("Heater Hose Outlet", "Mangueira de saída do aquecedor");
